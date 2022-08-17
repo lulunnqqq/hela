@@ -36,81 +36,36 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var _this = this;
 callbacksEmbed["amoviestream_2"] = function (dataCallback, provider, host, callback, metadata) { return __awaiter(_this, void 0, void 0, function () {
-    var data, parse, source3, tracks, rank, _i, source3_1, embedItem, embedData, patternQuality, directQuality, _a, patternQuality_1, patternItem, sizeQuality, urlDirect, urlDirect;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
+    var data, parse, embed;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
             case 0:
-                libs.log(dataCallback, provider, 'DATA CALLBACK');
-                if (!dataCallback) {
-                    return [2];
-                }
                 data = JSON.parse(dataCallback);
-                if (!data.responseURL) {
+                if (!data.html) {
                     return [2];
                 }
-                if (!(data.responseURL.indexOf("mediainfo") != -1)) return [3, 4];
-                libs.log(data, provider, 'DATA MEDIAINFO');
-                parse = JSON.parse(data.responseText);
-                source3 = parse['data']['media']['sources'];
-                tracks = parse['tracks'] || [];
-                libs.log({ source3: source3, tracks: tracks }, provider, 'SOURCES');
-                rank = 0;
-                _i = 0, source3_1 = source3;
-                _b.label = 1;
-            case 1:
-                if (!(_i < source3_1.length)) return [3, 4];
-                embedItem = source3_1[_i];
-                if (!embedItem.file) {
-                    return [3, 3];
-                }
-                if (!(embedItem.file.indexOf('vidstream') != -1 || embedItem.file.indexOf('mcloud.to') != -1 || embedItem.file.indexOf('vizcloud') != -1)) return [3, 3];
-                return [4, libs.request_get(embedItem.file, headers)];
-            case 2:
-                embedData = _b.sent();
-                if (!embedData) {
-                    return [3, 3];
-                }
-                patternQuality = embedData.match(/hls\/([0-9]+)\/[0-9]+\.m3u8/ig);
-                libs.log({ patternQuality: patternQuality, file: embedItem.file }, provider, 'PATTERN QUALITY');
-                if (!patternQuality) {
-                    libs.embed_callback(embedItem.file, provider, HOST, 'Hls', callback, ++rank, config.subs ? config.subs : []);
-                    return [3, 3];
-                }
-                directQuality = [];
-                for (_a = 0, patternQuality_1 = patternQuality; _a < patternQuality_1.length; _a++) {
-                    patternItem = patternQuality_1[_a];
-                    sizeQuality = patternItem.match(/([0-9]+)/i);
-                    sizeQuality = sizeQuality ? sizeQuality[1] : 'HD';
-                    if (embedItem.file.indexOf("list.m3u8#.mp4") != -1) {
-                        urlDirect = embedItem.file.replace('list.m3u8#.mp4', patternItem);
-                        libs.log({ urlDirect: urlDirect, sizeQuality: sizeQuality }, provider, 'URL DIRECR REPLACE');
-                        directQuality.push({
-                            file: urlDirect,
-                            quality: sizeQuality
-                        });
+                parse = cheerio.load(data.html);
+                embed = '';
+                parse('iframe').each(function (key, item) {
+                    var urlEmbed = parse(item).attr('src');
+                    libs.log({ urlEmbed: urlEmbed }, provider, 'URL EMBED');
+                    if (urlEmbed && urlEmbed.indexOf('mcloud') != -1) {
+                        embed = urlEmbed;
                     }
-                    else if (embedItem.file.indexOf("list.m3u8") != -1) {
-                        urlDirect = embedItem.file.replace('list.m3u8', patternItem);
-                        libs.log({ urlDirect: urlDirect, sizeQuality: sizeQuality }, provider, 'URL DIRECR REPLACE');
-                        directQuality.push({
-                            file: urlDirect,
-                            quality: sizeQuality
-                        });
+                    else if (urlEmbed && urlEmbed.indexOf('vidstream') != -1) {
+                        embed = urlEmbed;
                     }
-                }
-                libs.embed_callback(embedItem.file, provider, HOST, 'Hls', callback, ++rank, config.subs ? config.subs : [], directQuality, {
-                    referer: url,
-                    origin: DOMAIN,
-                    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36',
-                    'sec-fetch-dest': 'empty',
-                    'sec-fetch-mode': 'cors',
-                    'sec-fetch-site': 'cross-site',
+                    else if (urlEmbed && urlEmbed.indexOf('vizcloud2') != -1) {
+                        embed = urlEmbed;
+                    }
                 });
-                _b.label = 3;
-            case 3:
-                _i++;
-                return [3, 1];
-            case 4: return [2];
+                if (!embed) return [3, 2];
+                libs.log({ embed: embed }, provider, 'URL EMBED');
+                return [4, libs.embed_redirect(embed, '', metadata.movieInfo, provider, callback, undefined, metadata.tracks ? metadata.tracks : [])];
+            case 1:
+                _a.sent();
+                _a.label = 2;
+            case 2: return [2];
         }
     });
 }); };
